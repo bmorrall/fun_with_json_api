@@ -12,4 +12,11 @@ gemspec
 
 gem 'rake', '< 11.0'
 
+if (ams_version = ENV['AMS_VERSION'])
+  gem 'active_model_serializers', "= #{ams_version}"
+elsif (ams_branch = ENV.fetch('AMS_BRANCH', 'master'))
+  gem 'active_model_serializers', github: 'rails-api/active_model_serializers',
+                                  branch: ams_branch
+end
+
 gem 'pry', group: [:development, :test]

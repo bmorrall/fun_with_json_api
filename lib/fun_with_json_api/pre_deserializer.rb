@@ -52,8 +52,6 @@ module FunWithJsonApi
       else
         ActiveModelSerializers::Adapter::JsonApi::Deserialization
       end
-
-      ActiveModel::Serializer::Adapter::JsonApi::Deserialization
     end
 
     def ams_deserializer_config
