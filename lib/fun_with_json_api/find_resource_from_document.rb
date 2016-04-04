@@ -89,6 +89,7 @@ module FunWithJsonApi
       payload = ExceptionPayload.new
       payload.pointer = '/data'
       payload.detail = missing_resource_message
+      payload.status = '410' if deserializer.resource_is_soft_deleted?(document_id)
       Exceptions::MissingResource.new(message, payload)
     end
 

@@ -47,10 +47,11 @@ module FunWithJsonApi
 
       def build_missing_resource_payload(collection_ids, resource_id, index)
         unless collection_ids.include?(resource_id)
-          ExceptionPayload.new(
-            pointer: "#{prefix}/#{index}",
-            detail: missing_resource_message(resource_id)
-          )
+          ExceptionPayload.new.tap do |payload|
+            payload.pointer = "#{prefix}/#{index}"
+            payload.detail = missing_resource_message(resource_id)
+            payload.status = '410' if deserializer.resource_is_soft_deleted?(resource_id)
+          end
         end
       end
 

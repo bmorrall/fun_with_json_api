@@ -52,6 +52,14 @@ module FunWithJsonApi
       resource_collection.find_by(id_param => id_value)
     end
 
+    def resource_is_soft_deleted?(id_value)
+      if resource_collection.respond_to?(:only_deleted)
+        resource_collection.only_deleted.where(id_param => id_value).any?
+      else
+        false
+      end
+    end
+
     # Takes a parsed params hash from ActiveModelSerializers::Deserialization and sanitizes values
     def sanitize_params(params)
       Hash[

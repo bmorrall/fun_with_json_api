@@ -8,7 +8,11 @@ module FunWithJsonApi
           missing.title ||= I18n.t('missing_resource', scope: 'fun_with_json_api.exceptions')
           missing.status ||= '404'
         end
-        super
+        super(message, payload)
+      end
+
+      def http_status
+        404 # Always return a 404 for a missing resource (including archived values)
       end
     end
   end

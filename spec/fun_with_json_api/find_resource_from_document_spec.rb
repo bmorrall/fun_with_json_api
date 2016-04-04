@@ -65,18 +65,48 @@ describe FunWithJsonApi::FindResourceFromDocument do
               .and_return(nil)
           end
 
-          it 'raises a MissingResource error' do
-            allow(deserializer).to receive(:id_param).and_return(:id)
+          context 'with a soft deleted resource' do
+            before do
+              allow(deserializer).to receive(:resource_is_soft_deleted?).with('42').and_return(true)
+            end
 
-            expect { subject }.to raise_error(FunWithJsonApi::Exceptions::MissingResource) do |e|
-              expect(e.payload.size).to eq 1
+            it 'raises a MissingResource error' do
+              allow(deserializer).to receive(:id_param).and_return(:id)
 
-              payload = e.payload.first
-              expect(payload.status).to eq '404'
-              expect(payload.code).to eq 'missing_resource'
-              expect(payload.title).to eq 'Unable to find the requested resource'
-              expect(payload.detail).to eq "Unable to find 'person' with matching id: '42'"
-              expect(payload.pointer).to eq '/data'
+              expect { subject }.to raise_error(FunWithJsonApi::Exceptions::MissingResource) do |e|
+                expect(e.http_status).to eq 404
+                expect(e.payload.size).to eq 1
+
+                payload = e.payload.first
+                expect(payload.status).to eq '410'
+                expect(payload.code).to eq 'missing_resource'
+                expect(payload.title).to eq 'Unable to find the requested resource'
+                expect(payload.detail).to eq "Unable to find 'person' with matching id: '42'"
+                expect(payload.pointer).to eq '/data'
+              end
+            end
+          end
+
+          context 'with a non-existant resource' do
+            before do
+              allow(deserializer).to receive(:resource_is_soft_deleted?).with('42')
+                .and_return(false)
+            end
+
+            it 'raises a MissingResource error' do
+              allow(deserializer).to receive(:id_param).and_return(:id)
+
+              expect { subject }.to raise_error(FunWithJsonApi::Exceptions::MissingResource) do |e|
+                expect(e.http_status).to eq 404
+                expect(e.payload.size).to eq 1
+
+                payload = e.payload.first
+                expect(payload.status).to eq '404'
+                expect(payload.code).to eq 'missing_resource'
+                expect(payload.title).to eq 'Unable to find the requested resource'
+                expect(payload.detail).to eq "Unable to find 'person' with matching id: '42'"
+                expect(payload.pointer).to eq '/data'
+              end
             end
           end
         end

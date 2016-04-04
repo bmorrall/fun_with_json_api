@@ -2,6 +2,10 @@ AllCops:
   TargetRubyVersion: 2.2
   DisplayCopNames: true
 
+Metrics/ClassLength:
+  Exclude:
+    - 'lib/fun_with_json_api/deserializer.rb'
+
 Metrics/LineLength:
   Max: 100
   AllowURI: true

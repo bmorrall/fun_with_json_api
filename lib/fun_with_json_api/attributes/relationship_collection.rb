@@ -115,6 +115,7 @@ module FunWithJsonApi
             payload.pointer = "/data/relationships/#{name}/data/#{index}"
             payload.detail = "Unable to find '#{deserializer.type}' with matching id"\
                              ": \"#{resource_id}\""
+            payload.status = '410' if deserializer.resource_is_soft_deleted?(resource_id)
           end
         end.reject(&:nil?)
       end
