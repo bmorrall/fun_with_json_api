@@ -204,6 +204,7 @@ Ruby Object.
 | decimal             | :decimal    | BigDecimal         | 123.45                                 |
 | float               | :float      | Float              | 12.34                                  |
 | integer             | :integer    | Integer            | 12                                     |
+| base64 data         | :base64     | String             | "QUJDMTIz\n" => "ABC123"               |
 | uuid (RFC 4122 v4)  | :uuid_v4    | String             | '624f6dd0-91f2-4026-a684-01924da4be84' |
 
 ## Exceptions

@@ -25,6 +25,7 @@ en:
       invalid_float_attribute: "Float value must be a floating point number (i.e. 123.45)"
       invalid_integer_attribute: "Integer value must be a integer number (i.e. 123)"
       invalid_string_attribute: 'String value must be a JSON String (i.e. "Example")'
+      invalid_base64_attribute: 'Value must be a Base64 Encoded String'
       invalid_uuid_v4_attribute: 'UUID value must be RFC 4122 Version 4 UUID (i.e. "f47ac10b-58cc-4372-a567-0e02b2c3d479")'
       collection_method_not_supported: 'The current relationship does not support this action'
     schema_validators:
