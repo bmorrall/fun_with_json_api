@@ -13,7 +13,7 @@ module FunWithJsonApi
 
       def initialize(name, deserializer_class, options = {})
         options = options.reverse_merge(
-          attributes: [],
+          # attributes: [],
           relationships: []
         )
         super(name, options)

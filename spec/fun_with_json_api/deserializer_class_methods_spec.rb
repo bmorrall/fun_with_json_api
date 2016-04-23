@@ -20,7 +20,9 @@ describe FunWithJsonApi::DeserializerClassMethods do
       expect(relationship.as).to eq :foo
       expect(relationship.deserializer).to be_kind_of(foos_deserializer_class)
 
-      expect(relationship.deserializer.attributes).to eq []
+      expect(relationship.deserializer.attributes).to match(
+        [kind_of(FunWithJsonApi::Attributes::StringAttribute)]
+      )
       expect(relationship.deserializer.relationships).to eq []
     end
   end
@@ -45,7 +47,9 @@ describe FunWithJsonApi::DeserializerClassMethods do
       expect(relationship.param_value).to eq :foo_ids
       expect(relationship.deserializer).to be_kind_of(foos_deserializer_class)
 
-      expect(relationship.deserializer.attributes).to eq []
+      expect(relationship.deserializer.attributes).to match(
+        [kind_of(FunWithJsonApi::Attributes::StringAttribute)]
+      )
       expect(relationship.deserializer.relationships).to eq []
     end
   end

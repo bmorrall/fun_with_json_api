@@ -1,6 +1,8 @@
 require 'fun_with_json_api/exception'
 require 'fun_with_json_api/attribute'
 
+require 'fun_with_json_api/active_model_serializers/serializer_generator'
+
 require 'fun_with_json_api/configuration'
 require 'fun_with_json_api/pre_deserializer'
 require 'fun_with_json_api/deserializer'
