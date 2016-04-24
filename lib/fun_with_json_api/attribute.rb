@@ -27,12 +27,16 @@ module FunWithJsonApi
     end
     alias call decode
 
-    def encode(value)
-      value
+    def encode(resource)
+      resource.public_send(as)
     end
 
-    def sanitize_attribute_method
-      :"parse_#{param_value}"
+    def decode_attribute_method
+      :"decode_#{name}"
+    end
+
+    def encode_attribute_method
+      :"encode_#{name}"
     end
 
     def param_value

@@ -10,12 +10,12 @@ module FunWithJsonApi
     private_class_method :new
 
     attr_reader :document
-    attr_reader :deserializer
-    delegate :id_param, :id_param, :resource_class, to: :deserializer
+    attr_reader :json_api_resource
+    delegate :id_param, :id_param, :resource_class, to: :json_api_resource
 
-    def initialize(document, deserializer)
+    def initialize(document, json_api_resource)
       @document = FunWithJsonApi.sanitize_document(document)
-      @deserializer = deserializer
+      @json_api_resource = json_api_resource
     end
 
     def find
@@ -25,10 +25,10 @@ module FunWithJsonApi
       return [] if document_ids.empty?
 
       # Ensure the document matches the expected resource
-      check_document_types_match_deserializer!
+      check_document_types_match_json_api_resource!
 
       # Load resource from id value
-      deserializer.load_collection_from_id_values(document_ids).tap do |collection|
+      json_api_resource.load_collection_from_id_values(document_ids).tap do |collection|
         check_collection_contains_all_requested_resources!(collection)
         check_collection_is_authorised!(collection)
       end
@@ -43,7 +43,7 @@ module FunWithJsonApi
     end
 
     def resource_type
-      @resource_type ||= deserializer.type
+      @resource_type ||= json_api_resource.type
     end
 
     def document_is_valid_collection?
@@ -53,14 +53,14 @@ module FunWithJsonApi
     private
 
     def check_collection_contains_all_requested_resources!(collection)
-      SchemaValidators::CheckCollectionHasAllMembers.call(collection, document_ids, deserializer)
+      SchemaValidators::CheckCollectionHasAllMembers.call(collection, document_ids, json_api_resource)
     end
 
     def check_collection_is_authorised!(collection)
-      SchemaValidators::CheckCollectionIsAuthorised.call(collection, document_ids, deserializer)
+      SchemaValidators::CheckCollectionIsAuthorised.call(collection, document_ids, json_api_resource)
     end
 
-    def check_document_types_match_deserializer!
+    def check_document_types_match_json_api_resource!
       invalid_document_types = document_types.reject { |type| type == resource_type }
       raise build_invalid_document_types_error if invalid_document_types.any?
     end

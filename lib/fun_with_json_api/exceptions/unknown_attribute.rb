@@ -1,6 +1,6 @@
 module FunWithJsonApi
   module Exceptions
-    # Indicates a supplied attribute value is unknown to the current deserializer
+    # Indicates a supplied attribute value is unknown to the current json_api_resource
     class UnknownAttribute < FunWithJsonApi::Exception
       def initialize(message, payload = ExceptionPayload.new)
         payload = Array.wrap(payload).each do |unknown|

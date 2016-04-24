@@ -2,23 +2,12 @@ require 'fun_with_json_api/schema_validators/check_relationship_names'
 
 module FunWithJsonApi
   module SchemaValidators
-    class CheckRelationships
-      def self.call(document, deserializer)
-        new(document, deserializer).call
-      end
-
-      attr_reader :document
-      attr_reader :deserializer
-
-      def initialize(document, deserializer)
-        @document = document
-        @deserializer = deserializer
-      end
-
+    class CheckRelationships < Base
+      # Ensures all relationship names are known, writeable, and matches the expected type
       def call
         relationships = document['data'].fetch('relationships', {})
 
-        CheckRelationshipNames.call(document, deserializer, relationships.keys)
+        CheckRelationshipNames.call(document, json_api_resource, relationships.keys)
 
         check_for_invalid_relationship_type! relationships
 
@@ -71,7 +60,7 @@ module FunWithJsonApi
       end
 
       def build_invalid_relationship_type_payload(relationships_hash)
-        deserializer.relationships.map do |relationship|
+        json_api_resource.relationships.map do |relationship|
           data = relationships_hash.fetch(relationship.name.to_s, 'data' => nil)['data']
           if relationship.has_many?
             check_for_invalid_relationship_type_in_collection!(relationship, data)

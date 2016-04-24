@@ -14,10 +14,10 @@ describe 'Request Parsing', type: :request do
   context 'with invalid json api request data' do
     let(:invalid_request_data) { '{"data":{"id":"42","type":"foobar",}}' } # extra comma
 
-    context 'when force_render_parse_errors_as_json_api? is true' do
+    context 'when force_render_encode_errors_as_json_api? is true' do
       before do
         FunWithJsonApi.configure do |config|
-          config.force_render_parse_errors_as_json_api = true
+          config.force_render_encode_errors_as_json_api = true
         end
       end
 
@@ -66,10 +66,10 @@ describe 'Request Parsing', type: :request do
       end
     end
 
-    context 'when force_render_parse_errors_as_json_api? is false' do
+    context 'when force_render_encode_errors_as_json_api? is false' do
       before do
         FunWithJsonApi.configure do |config|
-          config.force_render_parse_errors_as_json_api = false
+          config.force_render_encode_errors_as_json_api = false
         end
       end
 

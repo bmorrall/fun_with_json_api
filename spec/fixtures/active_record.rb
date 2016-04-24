@@ -36,22 +36,22 @@ module ARModels
     has_many :posts
   end
 
-  class PostDeserializer < FunWithJsonApi::Deserializer
+  class PostJsonApiResource < FunWithJsonApi::ActiveModelResource
     resource_class Post
 
     attribute :title
     attribute :body
 
-    has_many :comments, -> { CommentDeserializer }
-    belongs_to :author, -> { AuthorDeserializer }
+    has_many :comments, -> { CommentJsonApiResource }
+    belongs_to :author, -> { AuthorJsonApiResource }
   end
 
-  class CommentDeserializer < FunWithJsonApi::Deserializer
+  class CommentJsonApiResource < FunWithJsonApi::ActiveModelResource
     resource_class Comment
 
     attribute :contents
 
-    belongs_to :author, -> { AuthorDeserializer }
+    belongs_to :author, -> { AuthorJsonApiResource }
   end
 
   class AuthorSerializer < ::ActiveModel::Serializer
@@ -62,13 +62,13 @@ module ARModels
     has_many :posts
   end
 
-  class AuthorDeserializer < FunWithJsonApi::Deserializer
+  class AuthorJsonApiResource < FunWithJsonApi::ActiveModelResource
     type 'person'
     id_param :code
     resource_class Author
 
     attribute :name
 
-    has_many :posts, -> { PostDeserializer }
+    has_many :posts, -> { PostJsonApiResource }
   end
 end

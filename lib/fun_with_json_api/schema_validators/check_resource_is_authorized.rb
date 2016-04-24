@@ -9,20 +9,20 @@ module FunWithJsonApi
 
       attr_reader :resource
       attr_reader :resource_id
-      attr_reader :deserializer
+      attr_reader :json_api_resource
       attr_reader :resource_pointer
 
-      def initialize(resource, resource_id, deserializer, resource_pointer: '/data')
+      def initialize(resource, resource_id, json_api_resource, resource_pointer: '/data')
         @resource = resource
         @resource_id = resource_id
-        @deserializer = deserializer
+        @json_api_resource = json_api_resource
         @resource_pointer = resource_pointer
       end
 
       def call
-        unless deserializer.resource_authorizer.call(resource)
+        unless json_api_resource.resource_authorizer.call(resource)
           raise Exceptions::UnauthorizedResource.new(
-            "resource_authorizer method for '#{deserializer.type}' returned a false value",
+            "resource_authorizer method for '#{json_api_resource.type}' returned a false value",
             ExceptionPayload.new(
               pointer: resource_pointer,
               detail: unauthorized_resource_message
@@ -32,7 +32,7 @@ module FunWithJsonApi
       end
 
       def resource_type
-        deserializer.type
+        json_api_resource.type
       end
 
       private

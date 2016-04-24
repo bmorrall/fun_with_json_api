@@ -2,16 +2,16 @@ require 'spec_helper'
 
 describe FunWithJsonApi::CollectionManager do
   subject(:instance) do
-    described_class.new(parent_resource, deserializer_class, deserializer_options)
+    described_class.new(parent_resource, json_api_resource_class, json_api_resource_options)
   end
-  let(:deserializer_class) { class_double('FunWithJsonApi::Deserializer') }
-  let(:deserializer_options) { double('deserializer_options') }
-  let(:deserializer) { instance_double('FunWithJsonApi::Deserializer', type: 'examples') }
+  let(:json_api_resource_class) { class_double('FunWithJsonApi::ActiveModelResource') }
+  let(:json_api_resource_options) { double('json_api_resource_options') }
+  let(:json_api_resource) { instance_double('FunWithJsonApi::ActiveModelResource', type: 'examples') }
   let(:parent_resource) { double('parent_resource') }
   before do
-    allow(deserializer_class).to receive(:create)
-      .with(deserializer_options)
-      .and_return(deserializer)
+    allow(json_api_resource_class).to receive(:create)
+      .with(json_api_resource_options)
+      .and_return(json_api_resource)
   end
 
   describe '#insert_records' do
@@ -36,8 +36,8 @@ describe FunWithJsonApi::CollectionManager do
             double('collection_a', success?: true),
             double('collection_b', success?: false)
           ]
-          allow(deserializer).to receive(:format_resource_id).with(collection[0]).and_return('id_a')
-          allow(deserializer).to receive(:format_resource_id).with(collection[1]).and_return('id_b')
+          allow(json_api_resource).to receive(:encode_resource_id).with(collection[0]).and_return('id_a')
+          allow(json_api_resource).to receive(:encode_resource_id).with(collection[1]).and_return('id_b')
 
           # Return success from the item
           allow(instance).to receive(:insert_record, &:success?)
@@ -102,8 +102,8 @@ describe FunWithJsonApi::CollectionManager do
             double('collection_a', success?: true),
             double('collection_b', success?: false)
           ]
-          allow(deserializer).to receive(:format_resource_id).with(collection[0]).and_return('id_a')
-          allow(deserializer).to receive(:format_resource_id).with(collection[1]).and_return('id_b')
+          allow(json_api_resource).to receive(:encode_resource_id).with(collection[0]).and_return('id_a')
+          allow(json_api_resource).to receive(:encode_resource_id).with(collection[1]).and_return('id_b')
 
           # Return success from the item
           allow(instance).to receive(:remove_record, &:success?)
@@ -173,7 +173,7 @@ describe FunWithJsonApi::CollectionManager do
 
   describe '#raise_invalid_resource_exception' do
     before do
-      allow(deserializer).to receive(:format_resource_id, &:id_value)
+      allow(json_api_resource).to receive(:encode_resource_id, &:id_value)
     end
 
     context 'with a invalid resource at an index' do

@@ -1,20 +1,29 @@
 require 'spec_helper'
 
 describe FunWithJsonApi::SchemaValidators::CheckDocumentTypeMatchesResource do
-  describe '.call' do
-    let(:schema_validator) do
-      instance_double('FunWithJsonApi::SchemaValidator')
+  describe '' do
+    let(:json_api_resource) do
+      instance_double('FunWithJsonApi::JsonApiResource', type: resource_type)
     end
-    subject { described_class.call(schema_validator) }
+    let(:document) { { 'data' => { 'type' => document_type } } }
+
+    context 'when document_type matches the resource_type' do
+      let(:document_type) { 'foobar' }
+      let(:resource_type) { 'foobar' }
+
+      it 'does not raise any exceptions' do
+        described_class.call(json_api_resource, document, double('resource'))
+      end
+    end
 
     context 'when document_type does not match resource_type' do
-      before do
-        allow(schema_validator).to receive(:document_type).and_return('examples')
-        allow(schema_validator).to receive(:resource_type).and_return('foobar')
-      end
+      let(:document_type) { 'examples' }
+      let(:resource_type) { 'foobar' }
 
       it 'raises a InvalidDocumentType error' do
-        expect { subject }.to raise_error(FunWithJsonApi::Exceptions::InvalidDocumentType) do |e|
+        expect do
+          described_class.call(json_api_resource, document, double('resource'))
+        end.to raise_error(FunWithJsonApi::Exceptions::InvalidDocumentType) do |e|
           expect(e.payload.size).to eq 1
 
           payload = e.payload.first

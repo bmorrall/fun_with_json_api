@@ -2,20 +2,25 @@ require 'spec_helper'
 
 describe FunWithJsonApi::SchemaValidators::CheckDocumentIdMatchesResource do
   describe '.call' do
-    let(:schema_validator) do
-      instance_double('FunWithJsonApi::SchemaValidator', resource_type: 'examples')
+    let(:resource_id) { double(:resource_id) }
+    let(:document_id) { double(:document_id) }
+
+    let(:json_api_resource) do
+      instance_double('FunWithJsonApi::ActiveModelResource', type: 'examples')
     end
-    subject { described_class.call(schema_validator) }
+    let(:document) { { 'data' => { 'id' => document_id } } }
+    let(:resource) { double('resource') }
+    before do
+      allow(json_api_resource).to receive(:encode_id).with(resource).and_return(resource_id)
+    end
+    subject { described_class.call(json_api_resource, document, resource) }
 
     context 'when the resource is persisted' do
-      let(:resource) { instance_double('ActiveRecord::Base', persisted?: true) }
-      before { allow(schema_validator).to receive(:resource).and_return(resource) }
+      let(:resource) { instance_double('ActiveRecord::Base', id: resource_id, persisted?: true) }
 
       context 'when /data/id does not match the resource id' do
-        before do
-          allow(schema_validator).to receive(:resource_id).and_return('11')
-          allow(schema_validator).to receive(:document_id).and_return('42')
-        end
+        let(:resource_id) { '11' }
+        let(:document_id) { '42' }
 
         it 'raises a InvalidDocumentIdentifier error' do
           expect do
@@ -34,9 +39,7 @@ describe FunWithJsonApi::SchemaValidators::CheckDocumentIdMatchesResource do
       end
 
       context 'when /data/id is not a string' do
-        before do
-          allow(schema_validator).to receive(:document_id).and_return(42)
-        end
+        let(:document_id) { 42 }
 
         it 'raises a InvalidDocument error' do
           expect do
@@ -57,16 +60,13 @@ describe FunWithJsonApi::SchemaValidators::CheckDocumentIdMatchesResource do
 
     context 'when the resource is not persisted' do
       let(:resource) { instance_double('ActiveRecord::Base', persisted?: false) }
-      before { allow(schema_validator).to receive(:resource).and_return(resource) }
 
       context 'when a document_id has been supplied' do
-        before { allow(schema_validator).to receive(:document_id).and_return('42') }
+        let(:document_id) { '42' }
 
-        context 'when the deserializer does not have an id attribute' do
-          let(:deserializer) { instance_double('FunWithJsonApi::Deserializer') }
+        context 'when the json_api_resource does not have an id attribute' do
           before do
-            allow(schema_validator).to receive(:deserializer).and_return(deserializer)
-            allow(deserializer).to receive(:attributes).and_return([])
+            allow(json_api_resource).to receive(:attributes).and_return([])
           end
 
           it 'raises a IllegalClientGeneratedIdentifier error' do
@@ -88,11 +88,9 @@ describe FunWithJsonApi::SchemaValidators::CheckDocumentIdMatchesResource do
             end
           end
         end
-        context 'when the deserializer has an id attribute' do
-          let(:deserializer) { instance_double('FunWithJsonApi::Deserializer') }
+        context 'when the json_api_resource has an id attribute' do
           before do
-            allow(schema_validator).to receive(:deserializer).and_return(deserializer)
-            allow(deserializer).to receive(:attributes).and_return(
+            allow(json_api_resource).to receive(:attributes).and_return(
               [
                 instance_double('FunWithJsonApi::Attribute', name: :id)
               ]
@@ -100,9 +98,7 @@ describe FunWithJsonApi::SchemaValidators::CheckDocumentIdMatchesResource do
           end
 
           context 'when /data/id is not a string' do
-            before do
-              allow(schema_validator).to receive(:document_id).and_return(42)
-            end
+            let(:document_id) { 42 }
 
             it 'raises a InvalidDocument error' do
               expect do
@@ -122,7 +118,7 @@ describe FunWithJsonApi::SchemaValidators::CheckDocumentIdMatchesResource do
 
           context 'when a resource matching id exists' do
             before do
-              allow(deserializer).to receive(:load_resource_from_id_value)
+              allow(json_api_resource).to receive(:load_resource_from_id_value)
                 .with('42')
                 .and_return(double('existing_resource', id: '24'))
             end

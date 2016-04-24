@@ -9,27 +9,27 @@ module FunWithJsonApi
 
       attr_reader :collection
       attr_reader :document_ids
-      attr_reader :deserializer
+      attr_reader :json_api_resource
       attr_reader :prefix
 
-      delegate :id_param, :resource_class, to: :deserializer
+      delegate :id_param, :resource_class, to: :json_api_resource
 
-      def initialize(collection, document_ids, deserializer, prefix: '/data')
+      def initialize(collection, document_ids, json_api_resource, prefix: '/data')
         @collection = collection
         @document_ids = document_ids
-        @deserializer = deserializer
+        @json_api_resource = json_api_resource
         @prefix = prefix
       end
 
       def call
         if collection.size != document_ids.size
-          collection_ids = deserializer.format_collection_ids(collection)
+          collection_ids = json_api_resource.encode_collection_ids(collection)
           raise build_missing_resources_error(collection_ids)
         end
       end
 
       def resource_type
-        deserializer.type
+        json_api_resource.type
       end
 
       private

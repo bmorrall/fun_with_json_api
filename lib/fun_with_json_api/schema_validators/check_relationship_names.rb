@@ -7,12 +7,12 @@ module FunWithJsonApi
       end
 
       attr_reader :document
-      attr_reader :deserializer
+      attr_reader :json_api_resource
       attr_reader :relationship_keys
 
-      def initialize(document, deserializer, relationship_keys)
+      def initialize(document, json_api_resource, relationship_keys)
         @document = document
-        @deserializer = deserializer
+        @json_api_resource = json_api_resource
         @relationship_keys = relationship_keys
       end
 
@@ -33,11 +33,11 @@ module FunWithJsonApi
       protected
 
       def resource_relationships
-        @resource_relationships ||= deserializer.relationships.map(&:name).map(&:to_s)
+        @resource_relationships ||= json_api_resource.relationships.map(&:name).map(&:to_s)
       end
 
       def known_relationships
-        @known_relationships ||= deserializer.class.relationship_names.map(&:to_s)
+        @known_relationships ||= json_api_resource.class.relationship_names.map(&:to_s)
       end
 
       private
@@ -78,7 +78,7 @@ module FunWithJsonApi
         I18n.t(
           :unknown_relationship_for_resource,
           relationship: relationship,
-          resource: deserializer.type,
+          resource: json_api_resource.type,
           scope: 'fun_with_json_api.schema_validators'
         )
       end
@@ -87,7 +87,7 @@ module FunWithJsonApi
         I18n.t(
           :unauthorized_relationship,
           relationship: relationship,
-          resource: deserializer.type,
+          resource: json_api_resource.type,
           scope: 'fun_with_json_api.schema_validators'
         )
       end

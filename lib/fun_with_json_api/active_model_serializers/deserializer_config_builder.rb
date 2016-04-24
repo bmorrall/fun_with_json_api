@@ -2,16 +2,16 @@ module FunWithJsonAPi
   module ActiveModelSerializers
     # Builds an options hash for ActiveModelSerializers::Deserialization.jsonapi_parse
     class DeserializerConfigBuilder
-      def self.build(deserializer)
-        new(deserializer).build
+      def self.build(json_api_resource)
+        new(json_api_resource).build
       end
 
       private_class_method :new
 
-      attr_reader :deserializer
+      attr_reader :json_api_resource
 
-      def initialize(deserializer)
-        @deserializer = deserializer
+      def initialize(json_api_resource)
+        @json_api_resource = json_api_resource
       end
 
       def build
@@ -24,14 +24,14 @@ module FunWithJsonAPi
       protected
 
       def build_only_values
-        attribute_only_values(deserializer.attributes) +
-          attribute_only_values(deserializer.relationships)
+        attribute_only_values(json_api_resource.attributes) +
+          attribute_only_values(json_api_resource.relationships)
       end
 
       def build_keys_value
         Hash[
-          attribute_key_values(deserializer.attributes) +
-          attribute_key_values(deserializer.relationships)
+          attribute_key_values(json_api_resource.attributes) +
+          attribute_key_values(json_api_resource.relationships)
         ]
       end
 

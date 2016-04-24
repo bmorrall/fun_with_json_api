@@ -15,7 +15,7 @@ describe FunWithJsonApi do
   end
 
   describe '.deserialize' do
-    context 'with an PostDeserializer' do
+    context 'with an PostJsonApiResource' do
       it 'converts a json api document into create post params' do
         ARModels::Author.create(id: 9, code: 'person_9')
         ARModels::Comment.create(id: 5)
@@ -42,7 +42,7 @@ describe FunWithJsonApi do
           }
         }
 
-        post_params = described_class.deserialize(post_json, ARModels::PostDeserializer)
+        post_params = described_class.deserialize(post_json, ARModels::PostJsonApiResource)
         expect(post_params).to eq(
           title: 'Rails is Omakase',
           body: 'This is my post body',
@@ -78,7 +78,7 @@ describe FunWithJsonApi do
           }
         }
 
-        post_params = described_class.deserialize(post_json, ARModels::PostDeserializer, post)
+        post_params = described_class.deserialize(post_json, ARModels::PostJsonApiResource, post)
         expect(post_params).to eq(
           title: 'Rails is Omakase',
           body: 'This is my post body',
@@ -117,7 +117,7 @@ describe FunWithJsonApi do
 
         post_params = described_class.deserialize(
           post_json,
-          ARModels::PostDeserializer,
+          ARModels::PostJsonApiResource,
           post,
           author: { id_param: :name, resource_collection: ARModels::Author.where(code: 'foo') }
         )
@@ -147,7 +147,7 @@ describe FunWithJsonApi do
         expect do
           described_class.deserialize(
             post_json,
-            ARModels::PostDeserializer,
+            ARModels::PostJsonApiResource,
             post,
             author: { resource_authorizer: ->(author) { author.id != 9 } }
           )
@@ -187,7 +187,7 @@ describe FunWithJsonApi do
         expect do
           described_class.deserialize(
             post_json,
-            ARModels::PostDeserializer,
+            ARModels::PostJsonApiResource,
             post,
             comments: { resource_authorizer: ->(comment) { comment.contents == 'Foobar' } }
           )
@@ -205,7 +205,7 @@ describe FunWithJsonApi do
       let(:document) { { data: { id: 'person_42', type: 'person' } } }
 
       it 'returns the matching resource' do
-        actual = described_class.find_resource(document, ARModels::AuthorDeserializer)
+        actual = described_class.find_resource(document, ARModels::AuthorJsonApiResource)
         expect(actual).to eq(resource)
       end
     end
@@ -218,7 +218,7 @@ describe FunWithJsonApi do
       it 'returns the resource scoped to the resource_collection' do
         actual = described_class.find_resource(
           document,
-          ARModels::AuthorDeserializer,
+          ARModels::AuthorJsonApiResource,
           id_param: 'code',
           resource_collection: ARModels::Author.where(name: 'Jack')
         )
@@ -236,7 +236,7 @@ describe FunWithJsonApi do
       end
 
       it 'returns all matching resources' do
-        actual = described_class.find_collection(document, ARModels::AuthorDeserializer)
+        actual = described_class.find_collection(document, ARModels::AuthorJsonApiResource)
         expect(actual).to eq([resource_a, resource_b])
       end
     end
@@ -250,7 +250,7 @@ describe FunWithJsonApi do
       it 'returns the resource scoped to the resource_collection' do
         actual = described_class.find_collection(
           document,
-          ARModels::AuthorDeserializer,
+          ARModels::AuthorJsonApiResource,
           id_param: 'code',
           resource_collection: ARModels::Author.where(name: 'Jack')
         )
@@ -262,7 +262,7 @@ describe FunWithJsonApi do
       let(:document) { { data: [] } }
 
       it 'returns an empty array' do
-        actual = described_class.find_collection(document, ARModels::AuthorDeserializer)
+        actual = described_class.find_collection(document, ARModels::AuthorJsonApiResource)
         expect(actual).to eq([])
       end
     end

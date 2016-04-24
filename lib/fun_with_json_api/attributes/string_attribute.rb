@@ -7,6 +7,11 @@ module FunWithJsonApi
         raise build_invalid_attribute_error(value)
       end
 
+      def encode(resource)
+        value = super(resource)
+        value.nil? ? nil : value.to_s
+      end
+
       private
 
       def build_invalid_attribute_error(value)

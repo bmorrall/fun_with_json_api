@@ -16,14 +16,15 @@ describe FunWithJsonApi::SchemaValidators::CheckRelationships do
       }
     end
     let(:relationship_data) { double('relationship_data') }
-    let(:deserializer) { instance_double('FunWithJsonApi::Deserializer', type: 'examples') }
-    subject { described_class.call(document, deserializer) }
+    let(:json_api_resource) { instance_double('FunWithJsonApi::ActiveModelResource', type: 'examples') }
+    let(:resource) { double('resource') }
+    subject { described_class.call(json_api_resource, document, resource) }
 
     context 'with a has-one relationship' do
       let(:relationship) do
         instance_double('FunWithJsonApi::Relationship', name: :foobar, has_many?: false)
       end
-      before { allow(deserializer).to receive(:relationships).and_return([relationship]) }
+      before { allow(json_api_resource).to receive(:relationships).and_return([relationship]) }
 
       context 'when the relationship item is a hash' do
         let(:relationship_data) { { 'id' => '24', 'type' => 'foobars' } }
@@ -75,7 +76,7 @@ describe FunWithJsonApi::SchemaValidators::CheckRelationships do
       let(:relationship) do
         instance_double('FunWithJsonApi::RelationshipCollection', name: :foobar, has_many?: true)
       end
-      before { allow(deserializer).to receive(:relationships).and_return([relationship]) }
+      before { allow(json_api_resource).to receive(:relationships).and_return([relationship]) }
 
       context 'when the relationship item is a array' do
         let(:relationship_data) { [{ 'id' => '24', 'type' => 'foobars' }] }
@@ -86,7 +87,7 @@ describe FunWithJsonApi::SchemaValidators::CheckRelationships do
           it { is_expected.to eq true }
         end
 
-        context 'when the type does not match the deserializer' do
+        context 'when the type does not match the json_api_resource' do
           before { allow(relationship).to receive(:type).and_return('invalid') }
 
           it 'raises a InvalidRelationshipType error' do
@@ -135,19 +136,19 @@ describe FunWithJsonApi::SchemaValidators::CheckRelationships do
       let(:relationship) do
         instance_double('FunWithJsonApi::RelationshipCollection', name: :foobar, has_many?: true)
       end
-      before { allow(deserializer).to receive(:relationships).and_return([relationship]) }
+      before { allow(json_api_resource).to receive(:relationships).and_return([relationship]) }
 
       it { is_expected.to eq true }
     end
 
     context 'when the document contains an excluded relationship' do
       before do
-        deserializer_class = class_double(
-          'FunWithJsonApi::Deserializer',
+        json_api_resource_class = class_double(
+          'FunWithJsonApi::ActiveModelResource',
           relationship_names: %i(foobar)
         )
-        allow(deserializer).to receive(:class).and_return(deserializer_class)
-        allow(deserializer).to receive(:relationships).and_return([])
+        allow(json_api_resource).to receive(:class).and_return(json_api_resource_class)
+        allow(json_api_resource).to receive(:relationships).and_return([])
       end
 
       it 'raises a UnauthorizedRelationship error' do
@@ -174,12 +175,12 @@ describe FunWithJsonApi::SchemaValidators::CheckRelationships do
 
     context 'when the document contains an unknown relationship' do
       before do
-        deserializer_class = class_double(
-          'FunWithJsonApi::Deserializer',
+        json_api_resource_class = class_double(
+          'FunWithJsonApi::ActiveModelResource',
           relationship_names: %i(blargh)
         )
-        allow(deserializer).to receive(:class).and_return(deserializer_class)
-        allow(deserializer).to receive(:relationships).and_return([])
+        allow(json_api_resource).to receive(:class).and_return(json_api_resource_class)
+        allow(json_api_resource).to receive(:relationships).and_return([])
       end
 
       it 'raises a UnknownRelationship error' do

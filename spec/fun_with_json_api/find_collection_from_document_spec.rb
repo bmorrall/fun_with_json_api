@@ -2,11 +2,11 @@ require 'spec_helper'
 
 describe FunWithJsonApi::FindCollectionFromDocument do
   describe '.find' do
-    let(:deserializer) { instance_double('FunWithJsonApi::Deserializer') }
-    subject { described_class.find(document, deserializer) }
+    let(:json_api_resource) { instance_double('FunWithJsonApi::ActiveModelResource') }
+    subject { described_class.find(document, json_api_resource) }
 
-    context 'with a deserializer' do
-      before { allow(deserializer).to receive(:type).and_return('person') }
+    context 'with a json_api_resource' do
+      before { allow(json_api_resource).to receive(:type).and_return('person') }
 
       context 'with a document containing a resource that matches the expected type' do
         let(:document) { { data: [{ id: '42', type: 'person' }] } }
@@ -14,7 +14,7 @@ describe FunWithJsonApi::FindCollectionFromDocument do
         context 'with a resource matching the document' do
           let!(:resource) { double('resource') }
           before do
-            allow(deserializer).to receive(:load_collection_from_id_values)
+            allow(json_api_resource).to receive(:load_collection_from_id_values)
               .with(['42'])
               .and_return([resource])
           end
@@ -23,7 +23,7 @@ describe FunWithJsonApi::FindCollectionFromDocument do
             before do
               resource_authorizer = double(:resource_authorizer)
               allow(resource_authorizer).to receive(:call).with(resource).and_return(true)
-              allow(deserializer).to receive(:resource_authorizer).and_return(resource_authorizer)
+              allow(json_api_resource).to receive(:resource_authorizer).and_return(resource_authorizer)
             end
 
             it 'returns the resource in a array' do
@@ -35,7 +35,7 @@ describe FunWithJsonApi::FindCollectionFromDocument do
             before do
               resource_authorizer = double(:resource_authorizer)
               allow(resource_authorizer).to receive(:call).with(resource).and_return(false)
-              allow(deserializer).to receive(:resource_authorizer).and_return(resource_authorizer)
+              allow(json_api_resource).to receive(:resource_authorizer).and_return(resource_authorizer)
             end
 
             it 'raises a UnauthorizedResource error' do
@@ -60,17 +60,17 @@ describe FunWithJsonApi::FindCollectionFromDocument do
         context 'with a single resource that cannot be found' do
           let!(:resource) { double('resource') }
           before do
-            allow(deserializer).to receive(:load_collection_from_id_values)
+            allow(json_api_resource).to receive(:load_collection_from_id_values)
               .with(['42'])
               .and_return([])
           end
 
           it 'raises a MissingResource error' do
-            allow(deserializer).to receive(:id_param).and_return(:id)
-            allow(deserializer).to receive(:resource_class).and_return(
+            allow(json_api_resource).to receive(:id_param).and_return(:id)
+            allow(json_api_resource).to receive(:resource_class).and_return(
               class_double('ActiveRecord::Base')
             )
-            allow(deserializer).to receive(:format_collection_ids).with([]).and_return([])
+            allow(json_api_resource).to receive(:encode_collection_ids).with([]).and_return([])
 
             expect { subject }.to raise_error(FunWithJsonApi::Exceptions::MissingResource) do |e|
               expect(e.payload.size).to eq 1
@@ -102,7 +102,7 @@ describe FunWithJsonApi::FindCollectionFromDocument do
           let!(:resource_b) { double('resource', code: '43') }
           let!(:resource_c) { double('resource', code: '44') }
           before do
-            allow(deserializer).to receive(:load_collection_from_id_values)
+            allow(json_api_resource).to receive(:load_collection_from_id_values)
               .with(%w(42 43 44))
               .and_return([resource_a, resource_b, resource_c])
           end
@@ -113,7 +113,7 @@ describe FunWithJsonApi::FindCollectionFromDocument do
               [resource_a, resource_b, resource_c].each do |resource|
                 allow(resource_authorizer).to receive(:call).with(resource).and_return(true)
               end
-              allow(deserializer).to receive(:resource_authorizer).and_return(resource_authorizer)
+              allow(json_api_resource).to receive(:resource_authorizer).and_return(resource_authorizer)
             end
 
             it 'returns all resources in a array' do
@@ -126,7 +126,7 @@ describe FunWithJsonApi::FindCollectionFromDocument do
               resource_authorizer = double(:resource_authorizer)
               allow(resource_authorizer).to receive(:call).and_return(false)
               allow(resource_authorizer).to receive(:call).with(resource_b).and_return(true)
-              allow(deserializer).to receive(:resource_authorizer).and_return(resource_authorizer)
+              allow(json_api_resource).to receive(:resource_authorizer).and_return(resource_authorizer)
             end
 
             it 'raises a UnauthorizedResource error' do
@@ -162,17 +162,17 @@ describe FunWithJsonApi::FindCollectionFromDocument do
           let!(:resource_b) { double('resource', code: '43') }
           let!(:resource_c) { double('resource', code: '44') }
           before do
-            allow(deserializer).to receive(:load_collection_from_id_values)
+            allow(json_api_resource).to receive(:load_collection_from_id_values)
               .with(%w(42 43 44))
               .and_return([resource_b])
           end
 
           it 'raises a MissingResource error with a payload for each error' do
-            allow(deserializer).to receive(:id_param).and_return(:code)
-            allow(deserializer).to receive(:resource_class).and_return(
+            allow(json_api_resource).to receive(:id_param).and_return(:code)
+            allow(json_api_resource).to receive(:resource_class).and_return(
               class_double('ActiveRecord::Base')
             )
-            allow(deserializer).to receive(:format_collection_ids).with(
+            allow(json_api_resource).to receive(:encode_collection_ids).with(
               [resource_b]
             ).and_return([resource_b.code])
 
@@ -263,7 +263,7 @@ describe FunWithJsonApi::FindCollectionFromDocument do
           { data: { id: '42', type: 'person' } }
         ].each do |invalid_document|
           expect do
-            described_class.find(invalid_document, deserializer)
+            described_class.find(invalid_document, json_api_resource)
           end.to raise_error(FunWithJsonApi::Exceptions::InvalidDocument) do |e|
             expect(e.payload.size).to eq 1
 

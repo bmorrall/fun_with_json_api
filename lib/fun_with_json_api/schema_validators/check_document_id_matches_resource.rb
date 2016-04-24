@@ -1,22 +1,7 @@
 module FunWithJsonApi
   module SchemaValidators
-    class CheckDocumentIdMatchesResource
-      def self.call(schema_validator)
-        new(schema_validator).call
-      end
-
-      attr_reader :schema_validator
-      delegate :resource,
-               :document_id,
-               :resource_id,
-               :resource_type,
-               :deserializer,
-               to: :schema_validator
-
-      def initialize(schema_validator)
-        @schema_validator = schema_validator
-      end
-
+    class CheckDocumentIdMatchesResource < Base
+      # Checks if the document id matches the resource being updated, or if it can be assigned
       def call
         if resource.try(:persisted?)
           # Ensure correct update document is being sent
@@ -54,10 +39,10 @@ module FunWithJsonApi
 
       def check_resource_id_can_be_client_generated
         # Ensure id has been provided as an attribute
-        if deserializer.attributes.none? { |attribute| attribute.name == :id }
-          deserializer_name = deserializer.class.name || 'Deserializer'
+        if json_api_resource.attributes.none? { |attribute| attribute.name == :id }
+          json_api_resource_name = json_api_resource.class.name || 'JsonApiResource'
           message = "id parameter for '#{resource_type}' cannot be set"\
-                    " as it has not been defined as a #{deserializer_name} attribute"
+                    " as it has not been defined as a #{json_api_resource_name} attribute"
           payload = ExceptionPayload.new(
             detail: resource_id_can_not_be_client_generated_message
           )
@@ -66,9 +51,9 @@ module FunWithJsonApi
       end
 
       def check_resource_id_has_not_already_been_used
-        if (existing = deserializer.load_resource_from_id_value(document_id))
-          deserializer_class = deserializer.class.name || 'Deserializer'
-          message = "#{deserializer_class}#load_resource_from_id_value for '#{resource_type}' has"\
+        if (existing = json_api_resource.load_resource_from_id_value(document_id))
+          json_api_resource_class = json_api_resource.class.name || 'JsonApiResource'
+          message = "#{json_api_resource_class}#load_resource_from_id_value for '#{resource_type}' has"\
                     ' found a existing resource matching document id'\
                     ": #{existing.class.name}##{existing.id}"
           payload = ExceptionPayload.new(

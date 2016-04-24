@@ -14,7 +14,7 @@ However, exceptions raised by invalid JSON documents cannot be handled by a Cont
 
 If an invalid document is receive, it will render out an exception response as json_api, only if
 the `Accept` header contains `application/vnd.api+json` or the configuration setting
-`force_render_parse_errors_as_json_api` has been set to true.
+`force_render_encode_errors_as_json_api` has been set to true.
 
 You can force all JSON API parse errors to be rended as JSON API, by creating an initializer and
 adding the following code:
@@ -22,34 +22,34 @@ adding the following code:
 ```
 # config/initializers/fun_with_json_api
 FunWithJsonApi.configure do |config|
-  config.force_render_parse_errors_as_json_api = true
+  config.force_render_encode_errors_as_json_api = true
 end
 ```
 
-## Deserializer
+## JsonApiResource
 
-With a User Deserializer:
+With a User JsonApiResource:
 
 ```
-class UserDeserializer < FunWithJsonApi::Deserializer
+class UserJsonApiResource < FunWithJsonApi::ActiveModelResource
   type 'people'
   resource_class User
 end
 ```
 
-and an Article Deserializer:
+and an Article JsonApiResource:
 
 ```
-class ArticlesDeserializer < FunWithJsonApi::Deserializer
+class ArticlesJsonApiResource < FunWithJsonApi::ActiveModelResource
   resource_class Article
 
   attribute :title
 
-  has_one :author, -> { UserDeserializer }
+  has_one :author, -> { UserJsonApiResource }
 end
 ```
 
-Calling `FunWithJsonApi.deserialize(params, ArticlesDeserializer)` within a controller,
+Calling `FunWithJsonApi.deserialize(params, ArticlesJsonApiResource)` within a controller,
 will convert:
 
 ```
@@ -75,7 +75,7 @@ Into parameters than can create an `Article`:
 }
 ```
 
-Or calling `FunWithJsonApi.deserialize_resource(params, ArticlesDeserializer, article)`,
+Or calling `FunWithJsonApi.deserialize_resource(params, ArticlesJsonApiResource, article)`,
 when the Article has an id of '24', it will convert:
 
 ```
@@ -98,10 +98,10 @@ status and I18n debugging information.
 
 ## Find Resource
 
-With a User Deserializer:
+With a User JsonApiResource:
 
 ```
-class UserDeserializer < FunWithJsonApi::Deserializer
+class UserJsonApiResource < FunWithJsonApi::ActiveModelResource
   type 'people'
   resource_class User
 end
@@ -115,7 +115,7 @@ and a document referencing a existing User:
 }
 ```
 
-Calling `FunWithJsonApi.find_resource(params, UserDeserializer)`, will return the User.
+Calling `FunWithJsonApi.find_resource(params, UserJsonApiResource)`, will return the User.
 
 A document with an empty data attribute:
 
@@ -138,7 +138,7 @@ With a document referencing many existing Users:
 }
 ```
 
-Calling `FunWithJsonApi.find_collection(params, UserDeserializer)`, will return all requested Users.
+Calling `FunWithJsonApi.find_collection(params, UserJsonApiResource)`, will return all requested Users.
 
 A document with an empty array:
 
@@ -153,10 +153,10 @@ controller.
 
 ## Attributes
 
-Attributes are declared within a Deserializer class. i.e.
+Attributes are declared within a JsonApiResource class. i.e.
 
 ```
-class ExampleDeserializer < FunWithJsonApi::Deserializer
+class ExampleJsonApiResource < FunWithJsonApi::ActiveModelResource
   attribute :foo
 end
 ```

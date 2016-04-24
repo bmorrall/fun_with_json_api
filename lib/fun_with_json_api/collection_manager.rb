@@ -6,11 +6,11 @@ module FunWithJsonApi
   # desired action on the collection.
   class CollectionManager
     attr_reader :parent_resource
-    attr_reader :deserializer
+    attr_reader :json_api_resource
 
-    def initialize(parent_resource, deserializer_class, deserializer_options)
+    def initialize(parent_resource, json_api_resource_class, json_api_resource_options)
       @parent_resource = parent_resource
-      @deserializer = deserializer_class.create(deserializer_options)
+      @json_api_resource = json_api_resource_class.create(json_api_resource_options)
     end
 
     # Inserts a single record into a collection
@@ -73,7 +73,7 @@ module FunWithJsonApi
     end
 
     def failure_message_for_resource(resource, failure_message_or_callable)
-      resource_id = deserializer.format_resource_id(resource)
+      resource_id = json_api_resource.encode_resource_id(resource)
       failure_message = failure_message_or_callable
       if failure_message.respond_to?(:call)
         failure_message = failure_message.call(resource_id)
@@ -86,7 +86,7 @@ module FunWithJsonApi
     def insert_not_supported_message
       I18n.t(
         'insert_not_supported',
-        resource: deserializer.type,
+        resource: json_api_resource.type,
         scope: 'fun_with_json_api.collection_manager'
       )
     end
@@ -94,7 +94,7 @@ module FunWithJsonApi
     def remove_not_supported_message
       I18n.t(
         'remove_not_supported',
-        resource: deserializer.type,
+        resource: json_api_resource.type,
         scope: 'fun_with_json_api.collection_manager'
       )
     end
@@ -102,7 +102,7 @@ module FunWithJsonApi
     def replace_all_not_supported_message
       I18n.t(
         'replace_all_not_supported',
-        resource: deserializer.type,
+        resource: json_api_resource.type,
         scope: 'fun_with_json_api.collection_manager'
       )
     end
@@ -110,7 +110,7 @@ module FunWithJsonApi
     def default_invalid_resource_message(resource_id)
       I18n.t(
         'invalid_resource',
-        resource: deserializer.type,
+        resource: json_api_resource.type,
         resource_id: resource_id,
         scope: 'fun_with_json_api.collection_manager'
       )

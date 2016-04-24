@@ -1,18 +1,6 @@
 module FunWithJsonApi
   module SchemaValidators
-    class CheckAttributeNames
-      def self.call(document, deserializer)
-        new(document, deserializer).call
-      end
-
-      attr_reader :document
-      attr_reader :deserializer
-
-      def initialize(document, deserializer)
-        @document = document
-        @deserializer = deserializer
-      end
-
+    class CheckAttributeNames < Base
       def call
         attributes = document['data'].fetch('attributes', {}).keys
 
@@ -23,11 +11,11 @@ module FunWithJsonApi
       end
 
       def resource_attributes
-        @resource_attributes ||= deserializer.attributes.map(&:name).map(&:to_s)
+        @resource_attributes ||= json_api_resource.attributes.map(&:name).map(&:to_s)
       end
 
       def known_attributes
-        @known_attributes ||= deserializer.class.attribute_names.map(&:to_s)
+        @known_attributes ||= json_api_resource.class.attribute_names.map(&:to_s)
       end
 
       private
@@ -74,7 +62,7 @@ module FunWithJsonApi
         I18n.t(
           :unknown_attribute_for_resource,
           attribute: attribute,
-          resource: deserializer.type,
+          resource: json_api_resource.type,
           scope: 'fun_with_json_api.schema_validators'
         )
       end
@@ -83,7 +71,7 @@ module FunWithJsonApi
         I18n.t(
           :forbidden_attribute_for_request,
           attribute: attribute,
-          resource: deserializer.type,
+          resource: json_api_resource.type,
           scope: 'fun_with_json_api.schema_validators'
         )
       end

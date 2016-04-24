@@ -1,10 +1,9 @@
-require 'active_support/inflector'
 require 'fun_with_json_api/attribute'
-require 'fun_with_json_api/deserializer_class_methods'
+require 'fun_with_json_api/resource_dsl_methods'
 
 module FunWithJsonApi
-  class Deserializer
-    extend FunWithJsonApi::DeserializerClassMethods
+  class JsonApiResource
+    extend FunWithJsonApi::ResourceDSLMethods
 
     # Fake resource_authorizer that always returns 'authorised'
     class ResourceAuthorizerDummy
@@ -18,7 +17,7 @@ module FunWithJsonApi
       new(options)
     end
 
-    # Use DeserializerClass.create to build new instances
+    # Use JsonApiResource<Class>.create to build new instances
     private_class_method :new
 
     attr_reader :id_param
@@ -27,45 +26,19 @@ module FunWithJsonApi
     def initialize(options = {})
       @id_param = options.fetch(:id_param) { self.class.id_param }
       @type = options.fetch(:type) { self.class.type }
-      @resource_class = options[:resource_class]
-      @resource_collection = options[:resource_collection] if @type
       @resource_authorizer = options[:resource_authorizer]
       load_attributes_from_options(options)
       load_relationships_from_options(options)
     end
 
-    # Loads a collection of of `resource_class` instances with `id_param` matching `id_values`
-    def load_collection_from_id_values(id_values)
-      resource_collection.where(id_param => id_values)
+    def encode_id(resource)
+      id_attribute.encode(resource).to_s
     end
 
-    def format_resource_id(resource)
-      resource.public_send(id_param).to_s
-    end
-
-    def format_collection_ids(collection)
-      collection.map { |resource| format_resource_id(resource) }
-    end
-
-    # Loads a single instance of `resource_class` with a `id_param` matching `id_value`
-    def load_resource_from_id_value(id_value)
-      resource_collection.find_by(id_param => id_value)
-    end
-
-    # Takes a parsed params hash from ActiveModelSerializers::Deserialization and sanitizes values
-    def sanitize_params(params)
-      Hash[
-        serialize_attribute_values(attributes, params) +
-        serialize_attribute_values(relationships, params)
-      ]
-    end
-
-    def resource_class
-      @resource_class ||= self.class.resource_class
-    end
-
-    def resource_collection
-      @resource_collection ||= resource_class
+    def id_attribute
+      @id_attribute ||= attributes.detect do |attribute|
+        attribute.name == :id
+      end || Attribute.create(:id, as: id_param)
     end
 
     def resource_authorizer
@@ -132,18 +105,6 @@ module FunWithJsonApi
       else
         relationships
       end
-    end
-
-    # Calls <attribute.as> on the current instance, override the #<as> method to change loading
-    def serialize_attribute_values(attributes, params)
-      attributes.select { |attribute| params.key?(attribute.param_value) }
-                .map { |attribute| serialize_attribute(attribute, params) }
-    end
-
-    # Calls <attribute.as> on the current instance, override the #<as> method to change loading
-    def serialize_attribute(attribute, params)
-      raw_value = params.fetch(attribute.param_value)
-      [attribute.param_value, public_send(attribute.sanitize_attribute_method, raw_value)]
     end
   end
 end

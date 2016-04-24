@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe FunWithJsonApi::ActiveModelSerializers::SerializerGenerator do
   describe '.call' do
-    it 'generates a active model serializer from a AuthorDeserializer' do
+    it 'generates a active model serializer from a AuthorJsonApiResource' do
       author = ARModels::Author.create(
         id: 42, code: 'person_12', name: Faker::Name.name
       )
@@ -10,8 +10,8 @@ describe FunWithJsonApi::ActiveModelSerializers::SerializerGenerator do
         id: 24, author_id: 42
       )
 
-      deserializer = ARModels::AuthorDeserializer.create
-      serializer_class = described_class.call(deserializer)
+      json_api_resource = ARModels::AuthorJsonApiResource.create
+      serializer_class = described_class.call(json_api_resource)
 
       options = {}
       serializer = serializer_class.new(author, options)
@@ -37,7 +37,7 @@ describe FunWithJsonApi::ActiveModelSerializers::SerializerGenerator do
       )
     end
 
-    it 'generates a active model serializer from a PostDeserializer' do
+    it 'generates a active model serializer from a PostJsonApiResource' do
       author = ARModels::Author.create(
         id: 42, code: 'person_12', name: Faker::Name.name
       )
@@ -51,8 +51,8 @@ describe FunWithJsonApi::ActiveModelSerializers::SerializerGenerator do
         id: 2, post_id: 24, contents: 'Comment 2'
       )
 
-      deserializer = ARModels::PostDeserializer.create
-      serializer_class = described_class.call(deserializer)
+      json_api_resource = ARModels::PostJsonApiResource.create
+      serializer_class = described_class.call(json_api_resource)
 
       options = {}
       serializer = serializer_class.new(post, options)

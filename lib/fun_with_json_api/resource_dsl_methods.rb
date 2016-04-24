@@ -1,8 +1,8 @@
 require 'fun_with_json_api/attribute'
 
 module FunWithJsonApi
-  # Provides a basic DSL for defining a FunWithJsonApi::Deserializer
-  module DeserializerClassMethods
+  # Provides a basic DSL for defining a FunWithJsonApi::ActiveModelResource
+  module ResourceDSLMethods
     def id_param(id_param = nil, format: false)
       lock.synchronize do
         @id_param = id_param.to_sym if id_param
@@ -21,19 +21,12 @@ module FunWithJsonApi
       @type || type_from_class_name
     end
 
-    def resource_class(resource_class = nil)
-      lock.synchronize do
-        @resource_class = resource_class if resource_class
-      end
-      @resource_class || type_from_class_name.singularize.classify.constantize
-    end
-
     # Attributes
 
     def attribute(name, options = {})
       lock.synchronize do
         Attribute.create(name, options).tap do |attribute|
-          add_parse_attribute_method(attribute)
+          add_convert_attribute_methods(attribute)
           attributes << attribute
         end
       end
@@ -54,14 +47,14 @@ module FunWithJsonApi
 
     # Relationships
 
-    def belongs_to(name, deserializer_class_or_callable, options = {})
+    def belongs_to(name, json_api_resource_class_or_callable, options = {})
       lock.synchronize do
         Attributes::Relationship.create(
           name,
-          deserializer_class_or_callable,
+          json_api_resource_class_or_callable,
           options
         ).tap do |relationship|
-          add_parse_resource_method(relationship)
+          add_convert_relationship_methods(relationship)
           relationships << relationship
         end
       end
@@ -69,14 +62,14 @@ module FunWithJsonApi
 
     # rubocop:disable Style/PredicateName
 
-    def has_many(name, deserializer_class_or_callable, options = {})
+    def has_many(name, json_api_resource_class_or_callable, options = {})
       lock.synchronize do
         Attributes::RelationshipCollection.create(
           name,
-          deserializer_class_or_callable,
+          json_api_resource_class_or_callable,
           options
         ).tap do |relationship|
-          add_parse_resource_method(relationship)
+          add_convert_relationship_methods(relationship)
           relationships << relationship
         end
       end
@@ -94,7 +87,7 @@ module FunWithJsonApi
           relationship = relationships.detect { |rel| rel.name == name }
           relationship.class.create(
             relationship.name,
-            relationship.deserializer_class,
+            relationship.json_api_resource_class,
             relationship_options.reverse_merge(relationship.options)
           )
         end
@@ -115,25 +108,33 @@ module FunWithJsonApi
       @relationships ||= []
     end
 
-    def add_parse_attribute_method(attribute)
-      define_method(attribute.sanitize_attribute_method) do |param_value|
+    def add_convert_attribute_methods(attribute)
+      define_method(attribute.decode_attribute_method) do |param_value|
         attribute_for(attribute.name).decode(param_value)
+      end
+      if attribute.name != :id
+        define_method(attribute.encode_attribute_method) do |resource|
+          attribute_for(attribute.name).encode(resource)
+        end
       end
     end
 
-    def add_parse_resource_method(resource)
-      define_method(resource.sanitize_attribute_method) do |param_value|
-        relationship_for(resource.name).decode(param_value)
+    def add_convert_relationship_methods(relationship)
+      define_method(relationship.decode_attribute_method) do |param_value|
+        relationship_for(relationship.name).decode(param_value)
+      end
+      define_method(relationship.encode_attribute_method) do |resource|
+        relationship_for(relationship.name).encode(resource)
       end
     end
 
     def type_from_class_name
       if name.nil?
-        Rails.logger.warn 'Unable to determine type for anonymous Deserializer'
+        Rails.logger.warn 'Unable to determine type for anonymous JsonApiResource'
         return nil
       end
 
-      resource_class_name = name.demodulize.sub(/Deserializer/, '').underscore
+      resource_class_name = name.demodulize.sub(/JsonApiResource\z/, '').underscore
       if ::ActiveModelSerializers.config.jsonapi_resource_type == :singular
         resource_class_name.singularize
       else

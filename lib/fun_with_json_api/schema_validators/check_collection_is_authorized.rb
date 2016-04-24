@@ -9,16 +9,16 @@ module FunWithJsonApi
 
       attr_reader :collection
       attr_reader :collection_ids
-      attr_reader :deserializer
+      attr_reader :json_api_resource
       attr_reader :prefix
 
       delegate :resource_class,
-               to: :deserializer
+               to: :json_api_resource
 
-      def initialize(collection, collection_ids, deserializer, prefix: '/data')
+      def initialize(collection, collection_ids, json_api_resource, prefix: '/data')
         @collection = collection
         @collection_ids = collection_ids
-        @deserializer = deserializer
+        @json_api_resource = json_api_resource
         @prefix = prefix
       end
 
@@ -30,19 +30,19 @@ module FunWithJsonApi
         return if payload.empty?
 
         raise Exceptions::UnauthorizedResource.new(
-          "resource_authorizer method for one or more '#{deserializer.type}' items returned false",
+          "resource_authorizer method for one or more '#{json_api_resource.type}' items returned false",
           payload
         )
       end
 
       def resource_type
-        deserializer.type
+        json_api_resource.type
       end
 
       private
 
       def build_unauthorized_resource_payload(resource, index)
-        unless deserializer.resource_authorizer.call(resource)
+        unless json_api_resource.resource_authorizer.call(resource)
           ExceptionPayload.new(
             pointer: "#{prefix}/#{index}",
             detail: unauthorized_resource_message(collection_ids[index])

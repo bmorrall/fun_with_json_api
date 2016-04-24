@@ -3,23 +3,23 @@ module FunWithJsonApi
     class Relationship < FunWithJsonApi::Attribute
       # Creates a new Relationship with name
       # @param name [String] name of the relationship
-      # @param deserializer_class_or_callable [Class] Class of Deserializer or
+      # @param json_api_resource_class_or_callable [Class] Class of JsonApiResource or
       #   a callable that returns one
       # @param options[at] [String] alias value for the attribute
-      def self.create(name, deserializer_class_or_callable, options = {})
-        new(name, deserializer_class_or_callable, options)
+      def self.create(name, json_api_resource_class_or_callable, options = {})
+        new(name, json_api_resource_class_or_callable, options)
       end
 
-      attr_reader :deserializer_class
-      delegate :type, to: :deserializer
+      attr_reader :json_api_resource_class
+      delegate :type, to: :json_api_resource
 
-      def initialize(name, deserializer_class, options = {})
+      def initialize(name, json_api_resource_class, options = {})
         options = options.reverse_merge(
           # attributes: [],
           relationships: []
         )
         super(name, options)
-        @deserializer_class = deserializer_class
+        @json_api_resource_class = json_api_resource_class
       end
 
       def decode(id_value)
@@ -27,7 +27,7 @@ module FunWithJsonApi
           raise build_invalid_relationship_error(id_value)
         end
 
-        resource = deserializer.load_resource_from_id_value(id_value)
+        resource = json_api_resource.load_resource_from_id_value(id_value)
         raise build_missing_relationship_error(id_value) if resource.nil?
 
         check_resource_is_authorized!(resource, id_value)
@@ -47,28 +47,36 @@ module FunWithJsonApi
         :"#{as}_id"
       end
 
-      def deserializer
-        @deserializer ||= build_deserializer_from_options
+      def decode_attribute_method
+        :"decode_#{name}_relationship"
+      end
+
+      def encode_attribute_method
+        :"encode_#{name}_relationship"
+      end
+
+      def json_api_resource
+        @json_api_resource ||= build_json_api_resource_from_options
       end
 
       private
 
       def check_resource_is_authorized!(resource, id_value)
         SchemaValidators::CheckResourceIsAuthorised.call(
-          resource, id_value, deserializer, resource_pointer: "/data/relationships/#{name}"
+          resource, id_value, json_api_resource, resource_pointer: "/data/relationships/#{name}"
         )
       end
 
-      def build_deserializer_from_options
-        if @deserializer_class.respond_to?(:call)
-          @deserializer_class.call
+      def build_json_api_resource_from_options
+        if @json_api_resource_class.respond_to?(:call)
+          @json_api_resource_class.call
         else
-          @deserializer_class
+          @json_api_resource_class
         end.create(options)
       end
 
       def build_invalid_relationship_error(id_value)
-        exception_message = "#{name} relationship should contain a single '#{deserializer.type}'"\
+        exception_message = "#{name} relationship should contain a single '#{json_api_resource.type}'"\
                             ' data hash'
         payload = ExceptionPayload.new
         payload.pointer = "/data/relationships/#{name}"
@@ -80,14 +88,14 @@ module FunWithJsonApi
         message ||= missing_resource_debug_message(id_value)
         payload = ExceptionPayload.new
         payload.pointer = "/data/relationships/#{name}"
-        payload.detail = "Unable to find '#{deserializer.type}' with matching id"\
+        payload.detail = "Unable to find '#{json_api_resource.type}' with matching id"\
                          ": #{id_value.inspect}"
         Exceptions::MissingRelationship.new(message, payload)
       end
 
       def missing_resource_debug_message(id_value)
-        "Couldn't find #{deserializer.resource_class.name}"\
-        " where #{deserializer.id_param} = #{id_value.inspect}"
+        "Couldn't find #{json_api_resource.resource_class.name}"\
+        " where #{json_api_resource.id_param} = #{id_value.inspect}"
       end
     end
   end

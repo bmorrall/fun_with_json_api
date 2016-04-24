@@ -13,12 +13,12 @@ describe FunWithJsonApi::SchemaValidators::CheckAttributeNames do
         }
       }
     end
-    let(:deserializer) { instance_double('FunWithJsonApi::Deserializer', type: 'examples') }
-    subject { described_class.call(document, deserializer) }
+    let(:json_api_resource) { instance_double('FunWithJsonApi::ActiveModelResource', type: 'examples') }
+    subject { described_class.call(json_api_resource, document, double('resource')) }
 
-    context 'when the document contains an attribute supported by the deserializer' do
+    context 'when the document contains an attribute supported by the json_api_resource' do
       let(:attribute) { instance_double('FunWithJsonApi::Attribute', name: :foobar) }
-      before { allow(deserializer).to receive(:attributes).and_return([attribute]) }
+      before { allow(json_api_resource).to receive(:attributes).and_return([attribute]) }
 
       it 'returns true' do
         expect(subject).to eq true
@@ -27,12 +27,12 @@ describe FunWithJsonApi::SchemaValidators::CheckAttributeNames do
 
     context 'when the document contains an disabled attribute' do
       before do
-        deserializer_class = class_double(
-          'FunWithJsonApi::Deserializer',
+        json_api_resource_class = class_double(
+          'FunWithJsonApi::ActiveModelResource',
           attribute_names: %i(foobar)
         )
-        allow(deserializer).to receive(:class).and_return(deserializer_class)
-        allow(deserializer).to receive(:attributes).and_return([])
+        allow(json_api_resource).to receive(:class).and_return(json_api_resource_class)
+        allow(json_api_resource).to receive(:attributes).and_return([])
       end
 
       it 'raises a UnauthorizedAttribute error' do
@@ -59,12 +59,12 @@ describe FunWithJsonApi::SchemaValidators::CheckAttributeNames do
 
     context 'when the document contains an unknown attribute' do
       before do
-        deserializer_class = class_double(
-          'FunWithJsonApi::Deserializer',
+        json_api_resource_class = class_double(
+          'FunWithJsonApi::ActiveModelResource',
           attribute_names: %i(blargh)
         )
-        allow(deserializer).to receive(:class).and_return(deserializer_class)
-        allow(deserializer).to receive(:attributes).and_return([])
+        allow(json_api_resource).to receive(:class).and_return(json_api_resource_class)
+        allow(json_api_resource).to receive(:attributes).and_return([])
       end
 
       it 'raises a UnknownAttribute error' do

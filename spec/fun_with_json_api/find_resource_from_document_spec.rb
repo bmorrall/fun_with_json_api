@@ -2,19 +2,19 @@ require 'spec_helper'
 
 describe FunWithJsonApi::FindResourceFromDocument do
   describe '.find' do
-    let(:deserializer) { instance_double('FunWithJsonApi::Deserializer') }
-    subject { described_class.find(document, deserializer) }
+    let(:json_api_resource) { instance_double('FunWithJsonApi::ActiveModelResource') }
+    subject { described_class.find(document, json_api_resource) }
 
     context 'with a document containing a resource' do
       let(:document) { { data: { id: '42', type: 'person' } } }
 
-      context 'with a deserializer that matches the document' do
-        before { allow(deserializer).to receive(:type).and_return('person') }
+      context 'with a json_api_resource that matches the document' do
+        before { allow(json_api_resource).to receive(:type).and_return('person') }
 
         context 'with a resource matching the document' do
           let!(:resource) { double('resource') }
           before do
-            allow(deserializer).to receive(:load_resource_from_id_value)
+            allow(json_api_resource).to receive(:load_resource_from_id_value)
               .with('42')
               .and_return(resource)
           end
@@ -23,7 +23,7 @@ describe FunWithJsonApi::FindResourceFromDocument do
             before do
               resource_authorizer = double(:resource_authorizer)
               allow(resource_authorizer).to receive(:call).with(resource).and_return(true)
-              allow(deserializer).to receive(:resource_authorizer).and_return(resource_authorizer)
+              allow(json_api_resource).to receive(:resource_authorizer).and_return(resource_authorizer)
             end
 
             it 'returns the resource' do
@@ -35,7 +35,7 @@ describe FunWithJsonApi::FindResourceFromDocument do
             before do
               resource_authorizer = double(:resource_authorizer)
               allow(resource_authorizer).to receive(:call).with(resource).and_return(false)
-              allow(deserializer).to receive(:resource_authorizer).and_return(resource_authorizer)
+              allow(json_api_resource).to receive(:resource_authorizer).and_return(resource_authorizer)
             end
 
             it 'raises a UnauthorizedResource error' do
@@ -60,13 +60,13 @@ describe FunWithJsonApi::FindResourceFromDocument do
         context 'when a resource cannot be found' do
           let!(:resource) { double('resource') }
           before do
-            allow(deserializer).to receive(:load_resource_from_id_value)
+            allow(json_api_resource).to receive(:load_resource_from_id_value)
               .with('42')
               .and_return(nil)
           end
 
           it 'raises a MissingResource error' do
-            allow(deserializer).to receive(:id_param).and_return(:id)
+            allow(json_api_resource).to receive(:id_param).and_return(:id)
 
             expect { subject }.to raise_error(FunWithJsonApi::Exceptions::MissingResource) do |e|
               expect(e.payload.size).to eq 1
@@ -82,8 +82,8 @@ describe FunWithJsonApi::FindResourceFromDocument do
         end
       end
 
-      context 'when the deserializer type does not match the document' do
-        before { allow(deserializer).to receive(:type).and_return('blargh') }
+      context 'when the json_api_resource type does not match the document' do
+        before { allow(json_api_resource).to receive(:type).and_return('blargh') }
 
         it 'raises a InvalidDocumentType error' do
           expect { subject }.to raise_error(FunWithJsonApi::Exceptions::InvalidDocumentType) do |e|
@@ -116,7 +116,7 @@ describe FunWithJsonApi::FindResourceFromDocument do
           { data: [{ id: 'foo', type: 'bar' }] }
         ].each do |invalid_document|
           expect do
-            described_class.find(invalid_document, deserializer)
+            described_class.find(invalid_document, json_api_resource)
           end.to raise_error(FunWithJsonApi::Exceptions::InvalidDocument) do |e|
             expect(e.payload.size).to eq 1
 

@@ -1,20 +1,7 @@
 module FunWithJsonApi
   module SchemaValidators
-    class CheckDocumentTypeMatchesResource
-      def self.call(schema_validator)
-        new(schema_validator).call
-      end
-
-      attr_reader :schema_validator
-      delegate :document_type,
-               :resource_type,
-               :deserializer,
-               to: :schema_validator
-
-      def initialize(schema_validator)
-        @schema_validator = schema_validator
-      end
-
+    class CheckDocumentTypeMatchesResource < Base
+      # Ensures the document type matches the expected resource
       def call
         if document_type != resource_type
           message = "'#{document_type}' does not match the expected resource"\

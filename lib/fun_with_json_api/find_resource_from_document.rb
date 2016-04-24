@@ -7,11 +7,11 @@ module FunWithJsonApi
     private_class_method :new
 
     attr_reader :document
-    attr_reader :deserializer
+    attr_reader :json_api_resource
 
-    def initialize(document, deserializer)
+    def initialize(document, json_api_resource)
       @document = FunWithJsonApi.sanitize_document(document)
-      @deserializer = deserializer
+      @json_api_resource = json_api_resource
     end
 
     def find
@@ -36,7 +36,7 @@ module FunWithJsonApi
     end
 
     def resource_type
-      @resource_type ||= deserializer.type
+      @resource_type ||= json_api_resource.type
     end
 
     def document_is_valid?
@@ -56,10 +56,10 @@ module FunWithJsonApi
     private
 
     def load_resource_and_check!
-      deserializer.load_resource_from_id_value(document_id).tap do |resource|
+      json_api_resource.load_resource_from_id_value(document_id).tap do |resource|
         raise build_missing_resource_error if resource.nil?
         FunWithJsonApi::SchemaValidators::CheckResourceIsAuthorised.call(
-          resource, document_id, deserializer
+          resource, document_id, json_api_resource
         )
       end
     end
@@ -83,8 +83,8 @@ module FunWithJsonApi
     end
 
     def build_missing_resource_error
-      deserializer_name = deserializer.class.name || 'Deserializer'
-      message = "#{deserializer_name} was unable to find resource by '#{deserializer.id_param}'"\
+      json_api_resource_name = json_api_resource.class.name || 'JsonApiResource'
+      message = "#{json_api_resource_name} was unable to find resource by '#{json_api_resource.id_param}'"\
                 ": '#{document_id}'"
       payload = ExceptionPayload.new
       payload.pointer = '/data'

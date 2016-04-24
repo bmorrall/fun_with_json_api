@@ -3,21 +3,21 @@ require 'fun_with_json_api/schema_validators/check_collection_is_authorized'
 module FunWithJsonApi
   module Attributes
     class RelationshipCollection < FunWithJsonApi::Attribute
-      def self.create(name, deserializer_class_or_callable, options = {})
-        new(name, deserializer_class_or_callable, options)
+      def self.create(name, json_api_resource_class_or_callable, options = {})
+        new(name, json_api_resource_class_or_callable, options)
       end
 
-      attr_reader :deserializer_class
+      attr_reader :json_api_resource_class
       attr_reader :options
-      delegate :type, to: :deserializer
+      delegate :type, to: :json_api_resource
 
-      def initialize(name, deserializer_class, options = {})
+      def initialize(name, json_api_resource_class, options = {})
         options = options.reverse_merge(
           # attributes: [],
           relationships: []
         )
         super(name, options)
-        @deserializer_class = deserializer_class
+        @json_api_resource_class = json_api_resource_class
       end
 
       # Expects an array of id values for a nested collection
@@ -26,7 +26,7 @@ module FunWithJsonApi
           raise build_invalid_relationship_collection_error(values)
         end
 
-        collection = deserializer.load_collection_from_id_values(values)
+        collection = json_api_resource.load_collection_from_id_values(values)
 
         # Ensure the collection size matches
         check_collection_matches_values!(collection, values)
@@ -51,17 +51,25 @@ module FunWithJsonApi
         :"#{as.to_s.singularize}_ids"
       end
 
-      def deserializer
-        @deserializer ||= build_deserializer_from_options
+      def decode_attribute_method
+        :"decode_#{name}_relationship"
+      end
+
+      def encode_attribute_method
+        :"encode_#{name}_relationship"
+      end
+
+      def json_api_resource
+        @json_api_resource ||= build_json_api_resource_from_options
       end
 
       private
 
-      def build_deserializer_from_options
-        if @deserializer_class.respond_to?(:call)
-          @deserializer_class.call
+      def build_json_api_resource_from_options
+        if @json_api_resource_class.respond_to?(:call)
+          @json_api_resource_class.call
         else
-          @deserializer_class
+          @json_api_resource_class
         end.create(options)
       end
 
@@ -75,21 +83,21 @@ module FunWithJsonApi
 
       def check_collection_is_authorized!(collection, values)
         SchemaValidators::CheckCollectionIsAuthorised.call(
-          collection, values, deserializer, prefix: "/data/relationships/#{name}/data"
+          collection, values, json_api_resource, prefix: "/data/relationships/#{name}/data"
         )
       end
 
       def convert_collection_to_ids(collection)
         if collection.respond_to? :pluck
           # Well... pluck+arel doesn't work with SQLite, but select at least is safe
-          collection = collection.select(deserializer.resource_class.arel_table[:id])
+          collection = collection.select(json_api_resource.resource_class.arel_table[:id])
         end
         collection.map(&:id)
       end
 
       def build_invalid_relationship_collection_error(values)
         exception_message = "#{name} relationship should contain a array of"\
-                            " '#{deserializer.type}' data"
+                            " '#{json_api_resource.type}' data"
         payload = ExceptionPayload.new
         payload.pointer = "/data/relationships/#{name}"
         payload.detail = exception_message
@@ -97,13 +105,13 @@ module FunWithJsonApi
       end
 
       def build_missing_relationship_error_from_collection(collection, values)
-        collection_ids = deserializer.format_collection_ids(collection)
+        collection_ids = json_api_resource.encode_collection_ids(collection)
 
         payload = build_missing_relationship_payload(collection_ids, values)
 
         missing_values = values.reject { |value| collection_ids.include?(value.to_s) }
-        exception_message = "Couldn't find #{deserializer.resource_class} items with "\
-                            "#{deserializer.id_param} in #{missing_values.inspect}"
+        exception_message = "Couldn't find #{json_api_resource.resource_class} items with "\
+                            "#{json_api_resource.id_param} in #{missing_values.inspect}"
         Exceptions::MissingRelationship.new(exception_message, payload)
       end
 
@@ -113,7 +121,7 @@ module FunWithJsonApi
 
           ExceptionPayload.new.tap do |payload|
             payload.pointer = "/data/relationships/#{name}/data/#{index}"
-            payload.detail = "Unable to find '#{deserializer.type}' with matching id"\
+            payload.detail = "Unable to find '#{json_api_resource.type}' with matching id"\
                              ": \"#{resource_id}\""
           end
         end.reject(&:nil?)
