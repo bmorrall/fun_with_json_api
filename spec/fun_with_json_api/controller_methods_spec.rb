@@ -37,7 +37,7 @@ describe FunWithJsonApi::ControllerMethods, type: :controller do
         it 'returns a json api error status' do
           get :index
           expect(response.status).to eq 403
-          expect(response.content_type).to eq 'application/vnd.api+json'
+          expect(response.content_type).to include('application/vnd.api+json')
         end
 
         it 'renders the exception payload as a json api errors response' do
@@ -77,7 +77,7 @@ describe FunWithJsonApi::ControllerMethods, type: :controller do
         it 'returns a json api error status' do
           get :index
           expect(response.status).to eq 403
-          expect(response.content_type).to eq 'application/vnd.api+json'
+          expect(response.content_type).to include('application/vnd.api+json')
         end
 
         it 'renders all exception payload items' do
@@ -108,7 +108,7 @@ describe FunWithJsonApi::ControllerMethods, type: :controller do
         it 'returns a json api error status' do
           get :index
           expect(response.status).to eq 422
-          expect(response.content_type).to eq 'application/vnd.api+json'
+          expect(response.content_type).to include('application/vnd.api+json')
         end
 
         it 'only renders the non-nil params' do

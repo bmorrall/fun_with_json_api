@@ -2,8 +2,8 @@ module FunWithJsonApi
   module SchemaValidators
     # Ensures all provided relationship names are known
     class CheckRelationshipNames
-      def self.call(*args)
-        new(*args).call
+      def self.call(...)
+        new(...).call
       end
 
       attr_reader :document

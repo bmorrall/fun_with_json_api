@@ -50,7 +50,7 @@ describe FunWithJsonApi::Railtie do
 
       it 'renders out the hash as a json_api response' do
         get :index
-        expect(response.content_type).to eq 'application/vnd.api+json'
+        expect(response.content_type).to include('application/vnd.api+json')
         expect(JSON.parse(response.body)).to eq(
           'data' => { 'id' => '42', 'type' => 'foobar' }
         )
@@ -66,7 +66,7 @@ describe FunWithJsonApi::Railtie do
 
       it 'renders the resource as a json api document' do
         get :index
-        expect(response.content_type).to eq 'application/vnd.api+json'
+        expect(response.content_type).to include('application/vnd.api+json')
         expect(JSON.parse(response.body)).to eq(
           'data' => {
             'id' => '42',

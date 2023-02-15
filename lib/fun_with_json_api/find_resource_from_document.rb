@@ -1,7 +1,7 @@
 module FunWithJsonApi
   class FindResourceFromDocument
-    def self.find(*args)
-      new(*args).find
+    def self.find(...)
+      new(...).find
     end
 
     private_class_method :new

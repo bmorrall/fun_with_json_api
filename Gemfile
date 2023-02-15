@@ -12,7 +12,7 @@ gemspec
 
 gem 'rake', '< 11.0'
 
-rails_version = ENV['RAILS_VERSION'] || '5.2'
+rails_version = ENV.fetch('RAILS_VERSION', '5.2')
 if rails_version == 'master'
   gem 'rails', github: 'rails/rails'
 else

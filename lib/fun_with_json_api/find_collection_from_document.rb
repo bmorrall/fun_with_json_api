@@ -3,8 +3,8 @@ require 'fun_with_json_api/schema_validators/check_collection_has_all_members'
 
 module FunWithJsonApi
   class FindCollectionFromDocument
-    def self.find(*args)
-      new(*args).find
+    def self.find(...)
+      new(...).find
     end
 
     private_class_method :new

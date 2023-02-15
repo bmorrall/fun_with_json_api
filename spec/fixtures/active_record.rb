@@ -17,7 +17,7 @@ ActiveRecord::Schema.define do
     t.text :contents
     t.references :author
     t.references :post
-    t.timestamp null: false
+    t.timestamps null: false
   end
 end
 

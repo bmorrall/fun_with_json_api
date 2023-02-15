@@ -3,8 +3,8 @@ require 'fun_with_json_api/exception'
 module FunWithJsonApi
   module SchemaValidators
     class CheckCollectionHasAllMembers
-      def self.call(*args)
-        new(*args).call
+      def self.call(...)
+        new(...).call
       end
 
       attr_reader :collection
